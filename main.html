@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fingerprinting Test</title>
+</head>
+<body>
+    <h1>Fingerprinting Test</h1>
+    <button onclick="collectData()">Collect Data</button>
+    <pre id="output"></pre>
+
+    <script type="application/javascript">
+        function collectData() {
+            const output = document.getElementById("output");
+
+            // User Agent
+            const userAgent = navigator.userAgent;
+
+            // Screen Dimensions
+            const screenDimensions = {
+                width: screen.width,
+                height: screen.height,
+                colorDepth: screen.colorDepth
+            };
+
+            // Timezone Information
+            const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            // Canvas Fingerprinting
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            ctx.fillText("canvas fingerprint", 50, 50);
+            const canvasFingerprint = canvas.toDataURL();
+
+            // WebGL Fingerprinting (simple example)
+            const gl = document.createElement('canvas').getContext('webgl');
+            const webglFingerprint = gl.getParameter(gl.VERSION);
+
+            // WebRTC (Only IP)
+            let ip;
+            const peerConnection = new RTCPeerConnection({iceServers: []});
+            peerConnection.createDataChannel("");
+            peerConnection.createOffer().then((sdp) => peerConnection.setLocalDescription(sdp));
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate && event.candidate.candidate) {
+                    const parts = event.candidate.candidate.split(" ");
+                    ip = parts[4];
+                }
+            };
+
+            // Battery Status
+            navigator.getBattery().then((battery) => {
+                const batteryLevel = battery.level;
+
+                // Compile all the information
+                const fingerprintData = {
+                    userAgent,
+                    screenDimensions,
+                    timeZone,
+                    canvasFingerprint,
+                    webglFingerprint,
+                    ip,
+                    batteryLevel
+                };
+
+                output.textContent = JSON.stringify(fingerprintData, null, 2);
+            });
+        }
+    </script>
+</body>
+</html>
